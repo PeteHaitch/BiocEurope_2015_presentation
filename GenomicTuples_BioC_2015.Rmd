@@ -229,3 +229,5 @@ __Funding__
     + [`GenomicTuples` (GitHub devel)](https://github.com/PeteHaitch/GenomicTuples)
     + [`MethylationTuples` (GitHub devel)](https://github.com/PeteHaitch/MethylationTuples)
 * __Twitter__: [\@PeteHaitch](https://twitter.com/PeteHaitch)
+
+<img src="Maria.jpg" height="238.25px" width="914.25px" />

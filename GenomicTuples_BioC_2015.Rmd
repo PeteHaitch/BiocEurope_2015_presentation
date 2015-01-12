@@ -6,7 +6,7 @@ author:
   twitter: PeteHaitch
   www: www.peterhickey.org
   github: www.github.com/PeteHaitch
-date: "12 January 2015"
+date: "European Bioconductor Developers' Meeting, 12 January 2015"
 output: ioslides_presentation
 widescreen: true
 ---
@@ -18,9 +18,9 @@ knitr::opts_chunk$set(comment = ">#")
 ## Motivation {.smaller .build}
 
 > - Analysing counts of methylation patterns at genomic tuples
-> - Extracted using `methtuple` (Python [https://github.com/PeteHaitch/methtuple](https://github.com/PeteHaitch/methtuple))
+> - Counts extracted from `BAM` file using `methtuple` ([https://github.com/PeteHaitch/methtuple](https://github.com/PeteHaitch/methtuple); Python)
 
-__Output of `methtuple`__
+__Example output of `methtuple` for 3-tuples__
 
 ```
 chr     strand  pos1    pos2    pos3    MMM     MMU     MUM     MUU     UMM     UMU     UUM     UUU
@@ -44,11 +44,11 @@ chr1    +       782236  782243  782268  1       0       1       0       0       
 
 ![MethPat](MethPat.png)
 
-__Implemented in `MethylationTuples`__
+__`MethPat` implemented in `MethylationTuples`__
 
-* `MethylationTuples::MethPat` extends `GenomicRanges::SummarizedExperiment`
+* `MethPat` extends `GenomicRanges::SummarizedExperiment`
 
-## Genomic tuples
+## Genomic tuples {.build}
 
 ```
 chr     strand  pos1    pos2    pos3
@@ -59,10 +59,10 @@ chr1    +       781616  781763  781795
 chr1    +       781720  781732  781738
 ```
 
-__Idea__
+__`GenomicTuples`__
 
 * Extend `GenomicRanges` to _genomic tuples_
-* Retain a familiar interface
+* Retains a familiar interface
 
 ## `GTuples` 
 
@@ -71,13 +71,15 @@ library(GenomicTuples)
 # Create a GTuples object with two 3-tuples
 seqinfo <- Seqinfo("chr1", 1000, NA, "toy")
 gt <- GTuples(seqnames = 'chr1', 
-              tuples = matrix(c(1L, 5L, 5L, 10L, 10L, 20L), ncol = 3), 
+              ### <b>
+             tuples = matrix(c(1L, 5L, 5L, 10L, 10L, 20L), ncol = 3), 
+              ### </b>
               strand = "+", 
               seqinfo = seqinfo)
 gt
 ```
 
-## `GTuples` extends `GRanges`
+## `GTuples` extends `GRanges` {.build}
 
 ```{r, eval = FALSE}
 setClass("GTuples",
@@ -88,6 +90,16 @@ setClass("GTuples",
          prototype(
            internalPos = NULL,
            size = NA_integer_)
+)
+```
+
+```{r, eval = FALSE}
+# Ensure the internalPos slot "sticks" during subsetting, etc.
+setMethod(GenomicRanges:::extraColumnSlotNames, 
+          "GTuples",
+          function(x) {
+            c("internalPos")
+          }
 )
 ```
 
@@ -108,21 +120,46 @@ IPD(gt) # IPD = intra-pair distances
 
 ## Ill-defined `GTuples` methods {.build}
 
+__These return errors__
+
 * `coverage`
-* `flank`, `promoters`, `resize`, `restrict`, `narrow` 
+* `flank`, `promoters`, `resize`, `narrow` 
 * `disjoin`, `gaps`, `isDisjoint`, `range`, `reduce`
 * `mapCoords`
 * `Ops`, `intersect`, `pgap`, `pintersect`, `psetdiff`, `punion`, `setdiff`, `union`, `tile`
 
-Meaningful definitions (and pull requests) welcome!
+Meaningful definitions (and pull requests) are welcomed!
 
-## `GTuples` comparison
+## `GTuples` comparison and sorting
 
-__TODO__
+```{r, echo = FALSE}
+gt3 <- GTuples(seqnames = c('chr1', 'chr1', 'chr1', 'chr1', 'chr2', 'chr1', 
+                            'chr1'), 
+               tuples = matrix(c(10L, 10L, 10L, 10L, 10L, 5L, 10L, 20L, 20L, 
+                                 20L, 25L, 20L, 20L, 20L, 30L, 30L, 35L, 30L, 
+                                 30L, 30L, 35L), 
+                               ncol = 3), 
+               strand = c('+', '-', '*', '+', '+', '+', '+'))
+```
+
+```{r}
+# Sorted first by seqnames, then by strand, then by tuples
+sort(gt3)
+```
 
 ## `findOverlaps`-based methods
 
-__TODO__
+```{r, eval = FALSE}
+if (size < 3) {
+  # Treat GTuples as GRanges
+} else {
+  if (type == "equal") {
+    # Call .findEqual.GTuples()
+  } else {
+    # Treat GTuples as GRanges
+  }
+}
+```
 
 ## `GenomicTuples` summary {.build}
 
@@ -130,7 +167,7 @@ A drop in replacement for `GenomicRanges` when you have genomic _tuples_ rather 
 
 __Limitations__
 
-* All tuples must have same `size`
+* All tuples in a `GTuples` object must have same `size`
 * Room for improvement with `findOverlaps(x, y, type = 'equal')`
     + Performance
     + Not all options supported (e.g., `maxgap` and `minoverlap`)
@@ -141,9 +178,11 @@ An R package for analysing, managing and visualising methylation patterns at gen
 
 <div class="columns-2">
 
-__Methods__
+__Analyses__
 
 * Epialleles
+* Methylation entropy
+* Allele-specific methylation
 * Co-methylation
 
 ![ADS_LOR_quantile](ADS_LOR_quantile.png)
@@ -151,8 +190,9 @@ __Methods__
 </div>
 
 ## `MethylationTuples` development {.build}
-> - Add additional methods, improve documentation, and add vignette
-> - `MethPat` objects become increasingly sparse as `size` increases (and as $n$ increases)
+
+> - Adding additional features and tests, improving documentation and adding vignette
+> - __Performance__: `MethPat` objects become increasingly sparse as `size` increases (and as $n_{samples}$ increases)
      
 __12 whole-genome bisulfite-sequencing samples__
 
@@ -165,16 +205,17 @@ __12 whole-genome bisulfite-sequencing samples__
 
 ## Thanks
 
-__Advisors__
+__PhD advisors__
 
 * Terry Speed
 * Peter Hall
 
-__Coding__
+__Programming__
 
 * Hervé Pagès
 * Martin Morgan
 * Michael Lawrence
+* R/BioC community
 
 __Funding__
 
@@ -182,6 +223,7 @@ __Funding__
 
 ## Links
 
+* [Slides.Rmd (https://github.com/PeteHaitch/BiocEurope_2015_presentation)](https://github.com/PeteHaitch/BiocEurope_2015_presentation)
 * __GitHub__: [\@PeteHaitch](https://github.com/PeteHaitch/)
     + [`GenomicTuples` (release)](http://bioconductor.org/packages/release/bioc/html/GenomicTuples.html)
     + [`GenomicTuples` (GitHub devel)](https://github.com/PeteHaitch/GenomicTuples)

@@ -11,12 +11,16 @@ output: ioslides_presentation
 widescreen: true
 ---
 
+```{r, echo = FALSE}
+knitr::opts_chunk$set(comment = ">#")
+```
+
 ## Motivation {.smaller .build}
 
 > - Analysing counts of methylation patterns at genomic tuples
 > - Extracted using `methtuple` (Python [https://github.com/PeteHaitch/methtuple](https://github.com/PeteHaitch/methtuple))
 
-### Output of `methtuple` 
+__Output of `methtuple`__
 
 ```
 chr     strand  pos1    pos2    pos3    MMM     MMU     MUM     MUU     UMM     UMU     UUM     UUU
@@ -40,9 +44,9 @@ chr1    +       782236  782243  782268  1       0       1       0       0       
 
 ![MethPat](MethPat.png)
 
-### Implemented in `MethylationTuples`
+__Implemented in `MethylationTuples`__
 
-- `MethylationTuples::MethPat` extends `GenomicRanges::SummarizedExperiment`
+* `MethylationTuples::MethPat` extends `GenomicRanges::SummarizedExperiment`
 
 ## Genomic tuples
 
@@ -55,16 +59,16 @@ chr1    +       781616  781763  781795
 chr1    +       781720  781732  781738
 ```
 
-### Intention
+__Idea__
 
-- Extend `GenomicRanges` to _genomic tuples_
-- Retain a familiar interface
+* Extend `GenomicRanges` to _genomic tuples_
+* Retain a familiar interface
 
 ## `GTuples` 
 
 ```{r, message = FALSE}
 library(GenomicTuples)
-# Create a GTuples object with a single 3-tuple
+# Create a GTuples object with two 3-tuples
 seqinfo <- Seqinfo("chr1", 1000, NA, "toy")
 gt <- GTuples(seqnames = 'chr1', 
               tuples = matrix(c(1L, 5L, 5L, 10L, 10L, 20L), ncol = 3), 
@@ -73,61 +77,113 @@ gt <- GTuples(seqnames = 'chr1',
 gt
 ```
 
-## `GTuples` contains `GRanges` {.smaller}
+## `GTuples` extends `GRanges`
 
-```{r, }
-str(gt)
+```{r, eval = FALSE}
+setClass("GTuples",
+         contains = "GRanges",
+         representation(
+           internalPos = "matrixOrNULL", 
+           size = "integer"),
+         prototype(
+           internalPos = NULL,
+           size = NA_integer_)
+)
 ```
 
-## Useful `GTuples` methods
+## Useful `GTuples` methods (inherited)
 
-### Inherited
+```{r}
+seqnames(gt)
+strand(gt)
+```
 
-- `seqnames`, `strand`, `seqinfo`
-
-### New
+## Useful `GTuples` methods (new)
 
 ```{r}
 size(gt)
 tuples(gt)
-IPD(gt)
+IPD(gt) # IPD = intra-pair distances
 ```
 
-### Ill-defined
+## Ill-defined `GTuples` methods {.build}
 
-- `coverage`
-- `flank`, `promoters`, `resize`, `restrict`, `narrow` 
-- `disjoin`, `gaps`, `isDisjoint`, `range`, `reduce`
-- `mapCoords`
-- `Ops`, 
+* `coverage`
+* `flank`, `promoters`, `resize`, `restrict`, `narrow` 
+* `disjoin`, `gaps`, `isDisjoint`, `range`, `reduce`
+* `mapCoords`
+* `Ops`, `intersect`, `pgap`, `pintersect`, `psetdiff`, `punion`, `setdiff`, `union`, `tile`
+
+Meaningful definitions (and pull requests) welcome!
 
 ## `GTuples` comparison
 
-## `GTuplesList` contains `GRangesList`
+__TODO__
 
-- No use case yet (but returned by `split()`)
+## `findOverlaps`-based methods
+
+__TODO__
+
+## `GenomicTuples` summary {.build}
+
+A drop in replacement for `GenomicRanges` when you have genomic _tuples_ rather than _ranges_.
+
+__Limitations__
+
+* All tuples must have same `size`
+* Room for improvement with `findOverlaps(x, y, type = 'equal')`
+    + Performance
+    + Not all options supported (e.g., `maxgap` and `minoverlap`)
+
+## `MethylationTuples` {.build}
+
+An R package for analysing, managing and visualising methylation patterns at genomic tuples.
+
+<div class="columns-2">
+
+__Methods__
+
+* Epialleles
+* Co-methylation
+
+![ADS_LOR_quantile](ADS_LOR_quantile.png)
+
+</div>
+
+## `MethylationTuples` development {.build}
+> - Add additional methods, improve documentation, and add vignette
+> - `MethPat` objects become increasingly sparse as `size` increases (and as $n$ increases)
+     
+__12 whole-genome bisulfite-sequencing samples__
+
+|          | `pryr::object_size(x)` | `nrow`        | Number of assays | Percentage of `NA` and $0$ values |
+|----------|------------------------|---------------|------------------|------------------------------------------|
+| 1-tuples | $5.9$ GB               | $56,348,522$  | $2$              | $28\%$                                   |
+| 2-tuples | $20.1$ GB              | $100,586,237$ | $4$              | $80\%$                                   |
+| 3-tuples | $43.3$ GB              | $109,376,348$ | $8$              | $93\%$                                   |
+| 4-tuples | $80.5$ GB              | $102,625,758$ | $16$             | $97\%$                                     |
 
 ## Thanks
 
-### Advisors
+__Advisors__
 
-- Terry Speed
-- Peter Hall
+* Terry Speed
+* Peter Hall
 
-### Coding
+__Coding__
 
-- Hervé Pagès
-- Martin Morgan
-- Michael Lawrence
+* Hervé Pagès
+* Martin Morgan
+* Michael Lawrence
 
-### Funding
+__Funding__
 
-- Edith Moffat Travel Award
+* Edith Moffat Travel Award
 
 ## Links
 
-- __GitHub__: [\@PeteHaitch](https://github.com/PeteHaitch/)
-- [`GenomicTuples` (release)](http://bioconductor.org/packages/release/bioc/html/GenomicTuples.html)
-- [`GenomicTuples` (GitHub devel)](https://github.com/PeteHaitch/GenomicTuples)
-- [`MethylationTuples` (GitGub devel)](https://github.com/PeteHaitch/MethylationTuples)
-- __Twitter__: [\@PeteHaitch](https://twitter.com/PeteHaitch)
+* __GitHub__: [\@PeteHaitch](https://github.com/PeteHaitch/)
+    + [`GenomicTuples` (release)](http://bioconductor.org/packages/release/bioc/html/GenomicTuples.html)
+    + [`GenomicTuples` (GitHub devel)](https://github.com/PeteHaitch/GenomicTuples)
+    + [`MethylationTuples` (GitHub devel)](https://github.com/PeteHaitch/MethylationTuples)
+* __Twitter__: [\@PeteHaitch](https://twitter.com/PeteHaitch)

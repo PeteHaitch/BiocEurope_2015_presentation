@@ -1,0 +1,133 @@
+---
+title: '`GenomicTuples` and DNA methylation patterns'
+author:
+- name: Peter Hickey (\@PeteHaitch)
+  company: Walter and Eliza Hall Institute of Medical Research
+  twitter: PeteHaitch
+  www: www.peterhickey.org
+  github: www.github.com/PeteHaitch
+date: "12 January 2015"
+output: ioslides_presentation
+widescreen: true
+---
+
+## Motivation {.smaller .build}
+
+> - Analysing counts of methylation patterns at genomic tuples
+> - Extracted using `methtuple` (Python [https://github.com/PeteHaitch/methtuple](https://github.com/PeteHaitch/methtuple))
+
+### Output of `methtuple` 
+
+```
+chr     strand  pos1    pos2    pos3    MMM     MMU     MUM     MUU     UMM     UMU     UUM     UUU
+chr1    +       781154  781161  781190  4       1       0       0       0       0       0       0
+chr1    +       781362  781406  781455  0       0       1       1       0       0       0       0
+chr1    +       781616  781720  781732  0       0       1       0       0       1       1       1
+chr1    +       781616  781763  781795  0       0       0       0       1       0       0       0
+chr1    +       781720  781732  781738  0       1       2       1       4       0       1       0
+chr1    +       781732  781738  781763  3       0       0       1       0       2       1       0
+chr1    +       781738  781763  781795  0       0       0       0       0       1       0       0
+chr1    +       781738  781763  781912  0       1       0       0       0       0       0       0
+chr1    +       781763  781795  781912  0       0       0       1       0       0       1       0
+chr1    +       781912  781989  782013  1       0       1       1       0       0       1       0
+chr1    +       781912  782013  782024  3       0       0       0       0       0       0       0
+chr1    +       781989  782013  782024  2       0       3       0       3       0       3       0
+chr1    +       782013  782024  782048  2       2       0       0       3       2       0       0
+chr1    +       782236  782243  782268  1       0       1       0       0       1       0       0
+```
+
+## Aim {.build}
+
+![MethPat](MethPat.png)
+
+### Implemented in `MethylationTuples`
+
+- `MethylationTuples::MethPat` extends `GenomicRanges::SummarizedExperiment`
+
+## Genomic tuples
+
+```
+chr     strand  pos1    pos2    pos3
+chr1    +       781154  781161  781190
+chr1    +       781362  781406  781455
+chr1    +       781616  781720  781732
+chr1    +       781616  781763  781795
+chr1    +       781720  781732  781738
+```
+
+### Intention
+
+- Extend `GenomicRanges` to _genomic tuples_
+- Retain a familiar interface
+
+## `GTuples` 
+
+```{r, message = FALSE}
+library(GenomicTuples)
+# Create a GTuples object with a single 3-tuple
+seqinfo <- Seqinfo("chr1", 1000, NA, "toy")
+gt <- GTuples(seqnames = 'chr1', 
+              tuples = matrix(c(1L, 5L, 5L, 10L, 10L, 20L), ncol = 3), 
+              strand = "+", 
+              seqinfo = seqinfo)
+gt
+```
+
+## `GTuples` contains `GRanges` {.smaller}
+
+```{r, }
+str(gt)
+```
+
+## Useful `GTuples` methods
+
+### Inherited
+
+- `seqnames`, `strand`, `seqinfo`
+
+### New
+
+```{r}
+size(gt)
+tuples(gt)
+IPD(gt)
+```
+
+### Ill-defined
+
+- `coverage`
+- `flank`, `promoters`, `resize`, `restrict`, `narrow` 
+- `disjoin`, `gaps`, `isDisjoint`, `range`, `reduce`
+- `mapCoords`
+- `Ops`, 
+
+## `GTuples` comparison
+
+## `GTuplesList` contains `GRangesList`
+
+- No use case yet (but returned by `split()`)
+
+## Thanks
+
+### Advisors
+
+- Terry Speed
+- Peter Hall
+
+### Coding
+
+- Hervé Pagès
+- Martin Morgan
+- Michael Lawrence
+
+### Funding
+
+- Edith Moffat Travel Award
+
+## Links
+
+- __GitHub__: [\@PeteHaitch](https://github.com/PeteHaitch/)
+- [`GenomicTuples` (release)](http://bioconductor.org/packages/release/bioc/html/GenomicTuples.html)
+- [`GenomicTuples` (GitHub devel)](https://github.com/PeteHaitch/GenomicTuples)
+- [`MethylationTuples` (GitGub devel)](https://github.com/PeteHaitch/MethylationTuples)
+- __Twitter__: [\@PeteHaitch](https://twitter.com/PeteHaitch)
